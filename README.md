@@ -18,7 +18,7 @@
 > *The raid leader is sighing. The healer already released.*
 > *At least your guild will know exactly how many times this has happened.*
 
-**DeathAnnounce** is a lightweight WoW addon for **patch 3.3.5a** that reads your **Total Deaths** straight from the Achievements → Statistics page and announces it in Guild chat every single time you die — with the running total, for maximum accountability.
+**DeathAnnounce** is a lightweight WoW addon for **patch 3.3.5a** that counts your deaths and announces them in Guild chat every time you die — with the running total and a fully customisable message.
 
 ```
 ⚔️  Arthas has died for the 69th time LOL
@@ -29,9 +29,9 @@
 ## 📜 Features
 
 - 💀 **Auto-announces** every death to Guild chat
-- 📊 **Reads directly** from your Achievements → Statistics page (real total, not a session counter)
+- ✏️ **Fully customisable message** with tokens for name, count, and ordinal
 - 🔢 **Ordinal formatting** — 1st, 2nd, 3rd, 42nd... because details matter
-- 💾 **SavedVariables** keep your count persistent and in sync across sessions
+- 💾 **SavedVariables** keep your count persistent across sessions
 - 🔇 **Silently skips** if you're not in a guild (no error spam)
 - ⚙️ **Slash commands** for full control
 
@@ -50,20 +50,50 @@
 
 ---
 
-## ⚗️ First-Time Setup (Important!)
+## ⚗️ First-Time Setup
 
-The addon tries to sync your death count automatically from the achievement stat system on login. If the number looks wrong (counting from 1 instead of your real total), do this:
+On first install the counter starts at 0. Seed it with your real death total once and you're done forever:
 
-**Quick fix:**
-1. Open **Achievements → Statistics** in-game and find your real **Deaths** number
-2. Type `/da set <that number>` in chat
-3. You're done ✅
+1. Open **Achievements → Statistics** in-game and find your **Deaths** number
+2. Type `/da set <that number>` in chat  ✅
 
-**Proper fix (auto-sync forever after):**
-1. Type `/da findstat` — scans stat IDs and prints all numeric values
-2. Match one of them to your real death count
-3. Type `/da setstat <id>` to lock it in
-4. From now on it syncs automatically every login 🔄
+That's it. The addon counts up from there on every death.
+
+---
+
+## ✏️ Custom Messages
+
+Use `/da message <template>` to set whatever you want the guild to see.
+
+**Available tokens** — the addon fills these in automatically, you just type them as-is:
+
+| Token | Replaced with | Use when... |
+|---|---|---|
+| `{name}` | Your character's name | always |
+| `{ordinal}` | Number + suffix — `42nd`, `1st`, `100th` | your sentence says *"for the Nth time"* |
+| `{count}` | Plain number — `42`, `1`, `100` | your sentence says *"death #N"* or *"died N times"* |
+
+> **`{ordinal}` vs `{count}` — which one?**
+> Read your sentence out loud. If it sounds like *"for the forty-second time"* → use `{ordinal}`.
+> If it sounds like *"death number forty-two"* or *"died forty-two times"* → use `{count}`.
+
+**Examples:**
+```
+/da message {name} has died for the {ordinal} time LOL
+→  Arthas has died for the 42nd time LOL        ← ordinal fits "for the Nth time"
+
+/da message F in chat for {name}, death #{count}
+→  F in chat for Arthas, death #42              ← count fits "#N"
+
+/da message {name} has now died {count} times. Skill issue.
+→  Arthas has now died 42 times. Skill issue.   ← count fits "N times"
+
+/da message {name} bites the dust for the {ordinal} time RIP
+→  Arthas bites the dust for the 42nd time RIP
+```
+
+Type `/da message` with no argument to see your current template.
+Type `/da message reset` to go back to the default.
 
 ---
 
@@ -73,15 +103,15 @@ All commands use `/deathannounce` or the short form `/da`.
 
 | Command | Effect |
 |---|---|
-| `/da set <number>` | 🩸 Seed your real death count (the most important one) |
-| `/da sync` | 🔄 Re-sync count from achievement stat right now |
-| `/da test` | 👁️ Preview what the message looks like (local only, no guild spam) |
-| `/da send` | 📢 Force-send current count to guild |
+| `/da set <number>` | 🩸 Seed your real death count |
+| `/da message <template>` | ✏️ Set a custom death message |
+| `/da message` | 👁️ Show the current message template |
+| `/da message reset` | 🔄 Restore the default message |
 | `/da count` | 🔢 Print your current death count |
+| `/da test` | 👁️ Preview the message locally (no guild spam) |
+| `/da send` | 📢 Force-send to guild right now |
 | `/da enable` | ✅ Turn announcements on |
 | `/da disable` | ❌ Turn announcements off |
-| `/da setstat <id>` | 🔧 Override the achievement statistic ID |
-| `/da findstat` | 🔍 Scan IDs 1–500 and list all with numeric values |
 
 ---
 
@@ -89,9 +119,8 @@ All commands use `/deathannounce` or the short form `/da`.
 
 ```
 [Guild] [Arthas]: Arthas has died for the 1st time LOL
-[Guild] [Arthas]: Arthas has died for the 2nd time LOL
-[Guild] [Arthas]: Arthas has died for the 100th time LOL
-[Guild] [Arthas]: Arthas has died for the 420th time LOL
+[Guild] [Arthas]: Arthas has died for the 42nd time LOL
+[Guild] [Arthas]: F in chat for Arthas, death #420
 ```
 
 *Your raid leader has left the guild.*
@@ -101,25 +130,24 @@ All commands use `/deathannounce` or the short form `/da`.
 ## ❓ FAQ
 
 **Q: Does this require any special permissions or server access?**
-> Nope. It's a client-side addon. Install it like any other addon and it just works.
+> Nope. It's a fully client-side addon. Install it like any other addon and it just works.
 
 **Q: Will it spam if I die a lot in one fight?**
-> Each `PLAYER_DEAD` event = one message. Die once, one message. Die to the same trash pack 4 times... well, that's on you.
+> Each `PLAYER_DEAD` event = one message. Die once, one message. Die to the same trash pack 4 times... that's on you.
 
 **Q: What if I'm not in a guild?**
 > The addon detects this and silently skips the announcement. No errors, no spam.
 
-**Q: The death count starts at 1, not my real total!**
-> See the [First-Time Setup](#️-first-time-setup-important) section above. Use `/da set <your real count>`.
+**Q: The death count is wrong!**
+> Use `/da set <your real count>` to correct it at any time.
 
 ---
 
 ## ⚔️ Compatibility
 
-| Feature | Status |
+| | Status |
 |---|---|
 | WoW 3.3.5a (WotLK) | ✅ Fully supported |
-| Other patches | ❓ Untested |
 | TukUI / ElvUI | ✅ No conflicts |
 | Other death addons | ✅ No conflicts |
 

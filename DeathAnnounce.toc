@@ -1,0 +1,8 @@
+## Interface: 30300
+## Title: |cffFF4444Death|r|cffFFFFFFAnnounce|r
+## Notes: Announces your glorious deaths in Guild chat. RIP.
+## Author: You
+## Version: 1.0
+## SavedVariables: DeathAnnounceDB
+
+DeathAnnounce.lua
